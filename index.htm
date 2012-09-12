@@ -30,7 +30,7 @@
         }
 
         .slides-alt {
-            /*height: 140px;*/
+            height: 140px;
         }
 
         /*
@@ -50,8 +50,8 @@
         $(function(){
             $('.slides').slideshow({
                 //play: 3000,
-                //hoverPause: true,
-                //effect: 'fade',
+                //pauseOnHover: true,
+                effect: 'fade',
                 generateNavigation: true,
                 //paginationPrepend: true,
                 //navigationPrepend: true,
@@ -62,11 +62,11 @@
                     console.log( 'complete' )
                 }
             });
-            /* * /
+            /* */
             $('.slides-alt').slideshow({
                 generatePagiantion: false,
                 play: 4000,
-                hoverPause: true,
+                pauseOnHover: true,
                 //effect: 'fade'
             })
             /* */

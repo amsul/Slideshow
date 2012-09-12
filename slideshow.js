@@ -6,7 +6,7 @@
 
     =======================================
 
-    Slideshow v0.9.0
+    Slideshow v0.9.2
     By Amsul (http://amsul.ca)
     Inspired by http://slidesjs.com
 
@@ -108,6 +108,14 @@
             _self.SLIDES_COUNT = _self.$slides.length
 
 
+            // if slideshow should auto play
+            if ( _self.options.play ) {
+
+                // set the speed based on the play option
+                _self.SLIDE_SPEED = ( typeof _self.options.play === 'number' ) ? _self.options.play : 10000
+            }
+
+
             // update slides to show the first one immediately
             _self.updateSlides( 0, false, 0 )
 
@@ -121,17 +129,6 @@
             // generate the navigation
             if ( _self.options.generateNavigation ) {
                 _self.generateNavigation()
-            }
-
-
-            // if slideshow should auto play
-            if ( _self.options.play ) {
-
-                // set the speed based on the play option
-                _self.speed = ( typeof _self.options.play === 'number' ) ? _self.options.play : 10000
-
-                // bind the auto play
-                _self.bindPlay()
             }
 
 
@@ -248,7 +245,7 @@
 
 
             // if it's animating or there's no slide change
-            if ( _self.animating || targetSlide === _self.activeSlide ) {
+            if ( _self.ANIMATING || targetSlide === _self.activeSlide ) {
                 return _self
             }
 
@@ -290,7 +287,7 @@
 
 
             // it's animating just return it
-            if ( _self.animating ) {
+            if ( _self.ANIMATING ) {
                 return _self
             }
 
@@ -358,7 +355,7 @@
 
 
             // update the animating status
-            _self.animating = true
+            _self.ANIMATING = true
 
 
             // determine the speed
@@ -369,6 +366,11 @@
 
             // reset the play timer, if that
             if ( _self.options.play ) {
+
+                // switch off the player
+                clearTimeout( _self.player )
+
+                // bind the play again
                 _self.bindPlay()
             }
 
@@ -397,7 +399,7 @@
 
 
             return _self
-        }
+        } //updateSlides
 
 
 
@@ -408,17 +410,17 @@
         _self.bindPlay = function() {
 
             // declare the speed and default to 10 seconds
-            var targetSlide
+            var targetIndex
 
 
-            // if the speed is less than the slide speed with a 50ms buffer
-            if ( _self.speed < _self.options.speed + 50 ) {
+            // if there's no speed
+            if ( !_self.SLIDE_SPEED ) {
                 return _self
             }
 
 
             // bind the hover on pause, if that
-            if ( _self.options.hoverPause ) {
+            if ( _self.options.pauseOnHover ) {
                 _self.bindHoverPause()
             }
 
@@ -427,19 +429,19 @@
             _self.player = setTimeout( function() {
 
                 // if it's not animating
-                if ( !_self.animating ) {
+                if ( !_self.ANIMATING ) {
 
                     // normalize the target slide index with the slide after the active
-                    targetSlide = _self.normalizeIndex( _self.activeSlide + 1 )
+                    targetIndex = _self.normalizeIndex( _self.activeSlide + 1 )
 
                     // update the slides
-                    _self.updateSlides( targetSlide )
+                    _self.updateSlides( targetIndex )
                 }
 
-            }, _self.speed )
+            }, _self.SLIDE_SPEED )
 
             return _self
-        }
+        } //bindPlay
 
 
 
@@ -485,17 +487,17 @@
 
             var effect, opaque, position, changeClass,
 
-                // default to an empty callback
+                // create a full callback
                 fullCallback = function() {
 
                     // do callback
                     callback()
 
                     // if it's done showing and hiding
-                    if ( !_self.animatingHide && !_self.animatingShow ) {
+                    if ( !_self.ANIMATING_HIDE && !_self.ANIMATING_SHOW ) {
 
                         // set as done animating
-                        _self.animating = false
+                        _self.ANIMATING = false
 
                         // do the animation complete
                         _self.options.animationComplete()
@@ -567,16 +569,18 @@
                 // if the effect should be a fade
                 if ( _self.options.effect === 'fade' ) {
 
-                    // position previous slide above the target
-                    if ( _self.$activeSlide ) {
-                        _self.$activeSlide.css( 'z-index', 110 )
+                    // position slide to hide above the slide to show
+                    if ( _self.$activeSlide && toHide ) {
+                        $slide.css( 'z-index', 110 )
                     }
 
-                    // move initial position to 0 and layer below active slide
-                    $slide.css({
-                        zIndex: 100,
-                        left: '0%'
-                    })
+                    // position slide to show to position 0 and layer below slide to hide
+                    if ( !toHide ) {
+                        $slide.css({
+                            zIndex: 100,
+                            left: '0%'
+                        })
+                    }
 
                     // figure out if it's to hide or not
                     opaque = ( toHide ) ? 0 : 1
@@ -625,7 +629,7 @@
                 callback = function() {
 
                     // set as done showing
-                    _self.animatingShow = false
+                    _self.ANIMATING_SHOW = false
                 }
 
             // if there's no index or speed, just return
@@ -647,7 +651,7 @@
 
 
             // set as animating a slide to show
-            _self.animatingShow = true
+            _self.ANIMATING_SHOW = true
 
 
             // move this slide in to view with speed
@@ -676,7 +680,7 @@
                     _self.resetSlide( index )
 
                     // set as done hiding
-                    _self.animatingHide = false
+                    _self.ANIMATING_HIDE = false
                 }
 
 
@@ -687,7 +691,7 @@
 
 
             // set as animating a slide to hide
-            _self.animatingHide = true
+            _self.ANIMATING_HIDE = true
 
 
             // set this as slide to deactivate
@@ -819,7 +823,7 @@
         effect: 'slide', // string, '[next/prev], [pagination]', 'slide' or 'fade'
 
         play: false, // number or boolean, Autoplay slideshow, a positive number will set to true and be the time between slide animation in milliseconds or true would set to default speed
-        hoverPause: false, // boolean, Set to true and hovering over slideshow will pause it
+        pauseOnHover: false, // boolean, Set to true and hovering over slideshow will pause it
 
         animationStart: function() {}, // Function called at the start of a slide animation
         animationComplete: function() {}//, // Function called at the completion of a slide animation
