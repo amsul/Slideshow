@@ -51,15 +51,15 @@
             $('.slides').slideshow({
                 //play: 3000,
                 //pauseOnHover: true,
-                effect: 'fade',
+                //effect: 'fade',
                 generateNavigation: true,
                 //paginationPrepend: true,
                 //navigationPrepend: true,
-                animationStart: function() {
-                    console.log( 'started' )
+                animationStart: function( slideshow ) {
+                    console.log( 'started', slideshow.getActiveSlide() )
                 },
-                animationComplete: function() {
-                    console.log( 'complete' )
+                animationComplete: function( slideshow ) {
+                    console.log( 'complete', slideshow.getActiveSlide() )
                 }
             });
             /* */
