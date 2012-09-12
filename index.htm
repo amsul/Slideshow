@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <title>Slides, A Slideshow Plugin for jQuery</title>
+
+    <style type="text/css" media="screen">
+
+        body {
+            padding: 40px 40px 240px;
+            font-family: sans-serif;
+            font-size: 80%;
+        }
+
+        .slides {
+            width: 620px;
+            height: 140px;
+        }
+        .slides .slide,
+        .slides-alt .slide {
+            width: 620px;
+            height: 140px;
+            background: #ccc;
+        }
+        .slides .slide:nth-child(odd),
+        .slides-alt .slide:nth-child(odd) {
+            background: #eee;
+        }
+
+        .slides-alt {
+            height: 140px;
+        }
+
+        /*
+            Optional:
+            Show the current slide in the pagination
+        */
+        .active-pagination a {
+            color: red;
+        }
+    </style>
+
+    <script src="//code.jquery.com/jquery-1.8.0.min.js"></script>
+    <script src="slideshow.js"></script>
+
+    <script>
+        $(function(){
+            $('.slides').slideshow({
+                //play: 8000,
+                //hoverPause: true,
+                effect: 'fade',
+                generateNavigation: true,
+                //paginationPrepend: true,
+                //navigationPrepend: true
+            });
+            $('.slides-alt').slideshow({
+                generatePagiantion: false,
+                play: 4000,
+                hoverPause: true,
+                //effect: 'fade'
+            })
+        });
+    </script>
+</head>
+<body>
+
+    <div class="slides">
+        <div class="slide">
+            <h1>Slide 1</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="slide">
+            <h1>Slide 2</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="slide">
+            <h1>Slide 3</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="slide">
+            <h1>Slide 4</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+    </div>
+
+    <span><br><br><br><br><br><br><br><br><br><br><br><br></span>
+
+    <div class="slides-alt">
+        <div class="slide">
+            <h1>ALT - Slide 1</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="slide">
+            <h1>ALT - Slide 2</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="slide">
+            <h1>ALT - Slide 3</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+        <div class="slide">
+            <h1>ALT - Slide 4</h1>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+        </div>
+    </div>
+
+    <span><br><br><br><br><br><br><br><br><br></span>
+
+</body>
+</html>
