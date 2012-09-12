@@ -24,6 +24,8 @@
 (function( $, window, document, undefined ) {
 /* */
 
+    'use strict';
+
 
     var Slideshower = function( slideshow, options ) {
 
@@ -44,6 +46,7 @@
         _self.initialize = function( slideshow, options ) {
 
             // store the slideshow element
+            _self.elem = slideshow
             _self.$elem = $( slideshow )
 
             // set the new options
@@ -63,18 +66,26 @@
 
         _self.setStage = function( slideshow ) {
 
-            var absolutePosition = {
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: 0
-            }
+            var
+                absolutePosition = {
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    right: 0,
+                    bottom: 0
+                }
 
 
             // store the dimensions
-            _self.width = _self.$elem.innerWidth()
-            _self.height = _self.$elem.innerHeight()
+            _self.WIDTH = _self.elem.clientWidth
+            _self.HEIGHT = _self.elem.clientHeight
+
+
+            // if there is no width or height
+            if ( !_self.WIDTH || !_self.HEIGHT ) {
+                console.error( 'Your slideshow needs to have a width and height:', slideshow )
+                return false
+            }
 
 
             // wrap and contain the slideshow
@@ -82,7 +93,7 @@
 
 
             // store the container while declaring the styles
-            _self.$container = _self.$elem.find( '.' + _self.options.container ).css({ width: _self.width, height: _self.height, overflow: 'hidden', position: 'relative' })
+            _self.$container = _self.$elem.find( '.' + _self.options.container ).css({ width: _self.WIDTH, height: _self.HEIGHT, overflow: 'hidden', position: 'relative' })
 
 
             // store the wrapper while declaring the styles
@@ -90,15 +101,15 @@
 
 
             // store the slides while declaring the styles
-            _self.$slides = _self.$elem.find( '.' + _self.options.slides ).css( absolutePosition ).css({ left: '100%', width: _self.width, height: _self.height })
+            _self.$slides = _self.$elem.find( '.' + _self.options.slides ).css( absolutePosition ).css({ left: '100%', width: _self.WIDTH, height: _self.HEIGHT })
 
 
             // store the number of slides
-            _self.slidesCount = _self.$slides.length
+            _self.SLIDES_COUNT = _self.$slides.length
 
 
-            // show the first slide
-            _self.showSlide()
+            // update slides to show the first one immediately
+            _self.updateSlides( 0, false, 0 )
 
 
             // generate the pagination
@@ -124,12 +135,6 @@
             }
 
 
-
-            // if there is no width or height
-            if ( !_self.$elem.innerWidth() || !_self.$elem.innerHeight() ) {
-                console.log( 'crap' )
-            }
-
             return _self
         }
 
@@ -149,7 +154,7 @@
 
 
             // according to the number of slides, add the slide links
-            for ( var i = 0, len = _self.slidesCount; i < len; i += 1 ) {
+            for ( var i = 0, len = _self.SLIDES_COUNT; i < len; i += 1 ) {
                 pagination += '<li class="' + _self.options.paginationItem + '"><a href="" data-index="' + i + '" class="' + _self.options.paginationLink + '">' + (i+1) + '</a></li>'
             }
 
@@ -218,6 +223,7 @@
         ======================================================================== */
 
         _self.activatePagination = function( index ) {
+
             _self.$paginationItems.slice( index, (index+1) ).addClass( _self.options.paginationActive )
             return _self
         }
@@ -282,6 +288,8 @@
             // prevent the default action
             e.preventDefault()
 
+
+            // it's animating just return it
             if ( _self.animating ) {
                 return _self
             }
@@ -296,12 +304,12 @@
             // set the direction
             rightward = ( $button.data( 'direction' ) === 'prev' )
 
+
             // figure out the target slide
             targetSlide = ( rightward ) ? _self.activeSlide - 1 : _self.activeSlide + 1
 
-
             // normalize the target slide index
-            targetSlide = _self.normalizeTarget( targetSlide )
+            targetSlide = _self.normalizeIndex( targetSlide )
 
 
             // update the slides
@@ -316,23 +324,23 @@
             Normalize the index of a target slide
         ======================================================================== */
 
-        _self.normalizeTarget = function( targetSlide ) {
+        _self.normalizeIndex = function( index ) {
 
             // if first slide is active and `prev` is clicked
-            if ( targetSlide < 0 ) {
+            if ( index < 0 ) {
 
                 // set last slide as target
-                targetSlide = _self.slidesCount - 1
+                index = _self.SLIDES_COUNT - 1
             }
 
             // if last slide is active and `next` is clicked
-            else if ( targetSlide === _self.slidesCount ) {
+            else if ( index === _self.SLIDES_COUNT ) {
 
                 // set first slide as target
-                targetSlide = 0
+                index = 0
             }
 
-            return targetSlide
+            return index
         }
 
 
@@ -341,11 +349,21 @@
             Update everything on a slide change
         ======================================================================== */
 
-        _self.updateSlides = function( targetSlide, rightward ) {
+        _self.updateSlides = function( targetSlide, rightward, speed ) {
 
             // if the target is the active slide
             if ( targetSlide === _self.activeSlide ) {
                 return _self
+            }
+
+
+            // update the animating status
+            _self.animating = true
+
+
+            // determine the speed
+            if ( typeof speed !== 'number' ) {
+                speed = _self.options.speed
             }
 
 
@@ -355,8 +373,8 @@
             }
 
 
-            // update the pagination, if that
-            if ( _self.options.generatePagination ) {
+            // update the pagination, if set and active slide has index
+            if ( _self.options.generatePagination && typeof _self.activeSlide === 'number' ) {
 
                 _self.
 
@@ -372,35 +390,11 @@
             _self.
 
                 // hide the active slide, possibly going `rightward`
-                hideSlide( _self.activeSlide, rightward ).
+                hideSlide( _self.activeSlide, speed, rightward ).
 
                 // show the target slide, possibly going `rightward`
-                showSlide( targetSlide, rightward )
+                showSlide( targetSlide, speed, rightward )
 
-            return _self
-        }
-
-
-
-        /*
-            Reset the position and state of a hidden slide
-        ======================================================================== */
-
-        _self.resetSlide = function( index ) {
-
-            _self.$slides.
-
-                // get this slide
-                slice( index, (index+1) ).
-
-                // move to the right and reset z-index
-                css({
-                    left: '100%',
-                    zIndex: ''
-                }).
-
-                // remove the active state
-                removeClass( _self.options.slidesActive )
 
             return _self
         }
@@ -436,7 +430,7 @@
                 if ( !_self.animating ) {
 
                     // normalize the target slide index with the slide after the active
-                    targetSlide = _self.normalizeTarget( _self.activeSlide + 1 )
+                    targetSlide = _self.normalizeIndex( _self.activeSlide + 1 )
 
                     // update the slides
                     _self.updateSlides( targetSlide )
@@ -467,6 +461,9 @@
                 },
                 'mouseleave.leavePause': function() {
 
+                    // switch off the player
+                    clearTimeout( _self.player )
+
                     // switch off the listener
                     _self.$elem.off( '.leavePause' )
 
@@ -476,7 +473,188 @@
             })
 
             return _self
-        }
+        } //bindHoverPause
+
+
+
+        /*
+            Activate a slide with speed, effect, and callback
+        ======================================================================== */
+
+        _self.doSlidesAnimation = function( $slide, speed, rightward, callback, toHide ) {
+
+            var effect, opaque, position, changeClass,
+
+                // default to an empty callback
+                fullCallback = function() {
+
+                    // do callback
+                    callback()
+
+                    // if it's done showing and hiding
+                    if ( !_self.animatingHide && !_self.animatingShow ) {
+
+                        // set as done animating
+                        _self.animating = false
+
+                        // do the animation complete
+                        _self.options.animationComplete()
+                    }
+                },
+
+
+                // prepare to animate a slide in to view
+                prepShow = function() {
+
+                    // do animation start
+                    _self.options.animationStart()
+
+
+                    // if there is no speed
+                    if ( !speed ) {
+
+                        // set options to show
+                        position = '0%'
+                        changeClass = 'addClass'
+                    }
+
+
+                    // if there's a speed
+                    else {
+
+
+                    }
+                }, //prepShow
+
+
+                // prepare to animate a slide out of view
+                prepHide = function() {
+
+                    // if there is no speed
+                    if ( !speed ) {
+
+                        // set options to hide
+                        position = '100%'
+                        changeClass = 'removeClass'
+                    }
+                } //prepHide
+
+
+            // prepare to hide or show
+            if ( toHide ) { prepHide() }
+            else { prepShow() }
+
+
+            // if there's no speed
+            if ( !speed ) {
+
+                $slide.
+
+                    // move in to position
+                    css( 'left', position )
+
+                    // change the active state class
+                    [ changeClass ]( _self.options.slidesActive )
+
+                // do the full callback
+                fullCallback()
+            }
+
+
+            // if there's a speed
+            else {
+
+                // if the effect should be a fade
+                if ( _self.options.effect === 'fade' ) {
+
+                    // position previous slide above the target
+                    if ( _self.$activeSlide ) {
+                        _self.$activeSlide.css( 'z-index', 110 )
+                    }
+
+                    // move initial position to 0 and layer below active slide
+                    $slide.css({
+                        zIndex: 100,
+                        left: '0%'
+                    })
+
+                    // figure out if it's to hide or not
+                    opaque = ( toHide ) ? 0 : 1
+
+                    // assign the animation effect
+                    effect = { opacity: opaque }
+                }
+
+                // otherwise default to slide effect
+                else {
+
+                    // reposition to left if needed
+                    if ( !toHide && rightward ) {
+                        $slide.css( 'left', '-100%' )
+                    }
+
+                    // figure out the move position
+                    position    =   ( toHide ) ?
+                                        ( rightward ) ? '100%' : '-100%'
+                                        : '0%'
+
+                    // assign the animation effect
+                    effect = { left: position }
+                }
+
+
+                // do the actual animation with these settingss
+                _self.animateSlide( $slide, effect, speed, fullCallback )
+            }
+
+
+            return _self
+        } //doSlidesAnimation
+
+
+
+        /*
+            Show the specified slide
+        ======================================================================== */
+
+        _self.showSlide = function( index, speed, rightward ) {
+
+            var $slideToActivate,
+
+                // callback when done animating
+                callback = function() {
+
+                    // set as done showing
+                    _self.animatingShow = false
+                }
+
+            // if there's no index or speed, just return
+            if ( typeof index !== 'number' || typeof speed !== 'number' ) {
+                return _self
+            }
+
+
+            // set this as the active slide
+            _self.activeSlide = index
+
+
+            // set this as slide to active
+            $slideToActivate = _self.$slides.slice( index, (index+1) )
+
+
+            // store the active slide
+            _self.$activeSlide = $slideToActivate
+
+
+            // set as animating a slide to show
+            _self.animatingShow = true
+
+
+            // move this slide in to view with speed
+            _self.doSlidesAnimation( $slideToActivate, speed, rightward, callback )
+
+            return _self
+        } //showSlide
 
 
 
@@ -485,9 +663,11 @@
             Hide the specified slide
         ======================================================================== */
 
-        _self.hideSlide = function( index, rightward ) {
+        _self.hideSlide = function( index, speed, rightward ) {
 
-            var position, animationEffect, speed, $targetSlide,
+            var position, animationEffect, $slideToDeactivate,
+
+                toHide = true,
 
                 // callback when done animating
                 callback = function() {
@@ -495,199 +675,80 @@
                     // reset the slide to the right
                     _self.resetSlide( index )
 
-                    // set the status as done hiding
+                    // set as done hiding
                     _self.animatingHide = false
-
-                    // update animating status if it's also done showing
-                    if ( !_self.animatingShow ) {
-                        _self.animating = false
-                    }
                 }
 
 
-            // return if the index is not a number or there's no change in index
-            if ( typeof index !== 'number' ) {
+            // if there's no index or speed, just return
+            if ( typeof index !== 'number' || typeof speed !== 'number' ) {
                 return _self
             }
 
 
-            // set animating status as true
-            _self.animating = true
+            // set as animating a slide to hide
             _self.animatingHide = true
 
 
-            // set the speed
-            speed = _self.options.speed
+            // set this as slide to deactivate
+            $slideToDeactivate = _self.$slides.slice( index, (index+1) )
 
 
-            // get the target slide
-            $slideToHide = _self.$slides.slice( index, (index+1) )
-
-
-            // if the effect should be a fade
-            if ( _self.options.effect === 'fade' ) {
-                animationEffect = { opacity: 0 }
-            }
-
-            // otherwise default to slide effect
-            else {
-
-                // check the direction
-                if ( rightward ) {
-                    position = '100%'
-                }
-                else {
-                    position = '-100%'
-                }
-
-                // assign the animation effect
-                animationEffect = { left: position }
-            }
-
-
-            // animate the slide
-            _self.animateSlide( $slideToHide, animationEffect, speed, callback )
-
+            // move this slide out of view
+            _self.doSlidesAnimation( $slideToDeactivate, speed, rightward, callback, toHide )
 
             return _self
-        }
+        } //hideSlide
 
 
 
         /*
-            Show the specified slide
+            Animate a slide with provided settings
         ======================================================================== */
 
-        _self.showSlide = function( index, rightward ) {
+        _self.animateSlide = function( $slide, effect, speed, callback ) {
 
-            var position, animationEffect, speed, $targetSlide,
+            $slide.
 
-                // callback when done animating
-                callback = function() {
-
-                    // store the active slide
-                    _self.$activeSlide = $targetSlide
-
-                    // add the active class
-                    $targetSlide.addClass( _self.options.slidesActive )
-
-                    // update the showing status
-                    _self.animatingShow = false
-
-                    // update animating status if it's also done hiding
-                    if ( !_self.animatingHide ) {
-                        _self.animating = false
-                    }
-                }
-
-
-            // make sure there is a valid index and speed
-            if ( typeof index !== 'number' ) {
-                index = 0
-                speed = 0
-            }
-            else {
-                speed = _self.options.speed
-            }
-
-
-            // set animating status as true
-            _self.animating = true
-            _self.animatingShow = true
-
-
-            // set this as the active slide
-            _self.activeSlide = index
-
-
-            // get the target slide
-            $targetSlide = _self.$slides.slice( index, (index+1) )
-
-
-            // if the effect should be a fade
-            if ( _self.options.effect === 'fade' ) {
-
-                // position active slide above
-                if ( _self.$activeSlide ) {
-                    _self.$activeSlide.css( 'z-index', 110 )
-                }
-
-                // move initial position to 0 and layer below active slide
-                $targetSlide.css({
-                    zIndex: 100,
-                    left: '0%'
-                })
-
-                // assign the animation effect
-                animationEffect = { opacity: 1 }
-            }
-
-
-            // otherwise default to slide effect
-            else {
-
-                // if it's rightward
-                if ( rightward ) {
-
-                    // move initial position to the left
-                    $targetSlide.css( 'left', '-100%' )
-                }
-
-                // assign the animation effect
-                animationEffect = { left: '0%' }
-            }
-
-
-            // animate the slide
-            _self.animateSlide( $targetSlide, animationEffect, speed, callback )
-
-
-            return _self
-        }
-
-
-
-        /*
-            Animate a target slide based on effect, speed, and callback
-        ======================================================================== */
-
-        _self.animateSlide = function( $target, effect, speed, callback ) {
-
-            $target.
-
-                // animate slide in to view
+                // animate in to view
                 stop().animate(
 
-                    // do the assigned effect
+                    // with the assigned effect
                     effect,
 
-                    // at the declared speed
+                    // at the given speed
                     speed,
 
-                    // once done animating, do callback
+                    // once done, do the callback
                     callback
                 )
 
             return _self
-        }
+        } //animateSlide
 
-
-
-
-
-        /* ==========================================================================
-
-            Public methods begin
-
-        ========================================================================== */
 
 
         /*
-            Get the index of the active slide
+            Reset the position and state of a hidden slide
         ======================================================================== */
 
-        Slideshower.getActiveSlide = function() {
-            return _self.activeSlide
+        _self.resetSlide = function( index ) {
+
+            _self.$slides.
+
+                // get this slide
+                slice( index, (index+1) ).
+
+                // move to the right and reset z-index
+                css({
+                    left: '100%',
+                    zIndex: ''
+                }).
+
+                // remove the active state
+                removeClass( _self.options.slidesActive )
+
+            return _self
         }
 
 
@@ -758,10 +819,14 @@
         effect: 'slide', // string, '[next/prev], [pagination]', 'slide' or 'fade'
 
         play: false, // number or boolean, Autoplay slideshow, a positive number will set to true and be the time between slide animation in milliseconds or true would set to default speed
-        hoverPause: false//, // boolean, Set to true and hovering over slideshow will pause it
+        hoverPause: false, // boolean, Set to true and hovering over slideshow will pause it
 
+        animationStart: function() {}, // Function called at the start of a slide animation
+        animationComplete: function() {}//, // Function called at the completion of a slide animation
 
         //// TODO
+
+        ///////generateProgress: false, // boolean, Set to true to show the progress between animations
 
         //////randomize: false, // boolean, Set to true to randomize slides
         //////pause: 0, // number, Pause slideshow on click of next/prev or pagination. A positive number will set to true and be the time of pause in milliseconds
@@ -779,9 +844,6 @@
         //////autoHeightSpeed: 350, // number, Set auto height animation time in milliseconds
         //////bigTarget: false, // boolean, Set to true and the whole slide will link to next slide on click
 
-
-        //////animationStart: function(){}, // Function called at the start of animation
-        //////animationComplete: function(){}, // Function called at the completion of animation
         //////slidesLoaded: function() {} // Function is called when slides is fully loaded
     }
 

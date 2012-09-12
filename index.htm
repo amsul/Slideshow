@@ -6,7 +6,7 @@
 
     <title>Slides, A Slideshow Plugin for jQuery</title>
 
-    <style type="text/css" media="screen">
+    <style type="text/css">
 
         body {
             padding: 40px 40px 240px;
@@ -30,7 +30,7 @@
         }
 
         .slides-alt {
-            height: 140px;
+            /*height: 140px;*/
         }
 
         /*
@@ -46,22 +46,32 @@
     <script src="slideshow.js"></script>
 
     <script>
+    /* */
         $(function(){
             $('.slides').slideshow({
-                //play: 8000,
+                //play: 3000,
                 //hoverPause: true,
-                effect: 'fade',
+                //effect: 'fade',
                 generateNavigation: true,
                 //paginationPrepend: true,
-                //navigationPrepend: true
+                //navigationPrepend: true,
+                animationStart: function() {
+                    console.log( 'started' )
+                },
+                animationComplete: function() {
+                    console.log( 'complete' )
+                }
             });
+            /* * /
             $('.slides-alt').slideshow({
                 generatePagiantion: false,
                 play: 4000,
                 hoverPause: true,
                 //effect: 'fade'
             })
+            /* */
         });
+    /* */
     </script>
 </head>
 <body>
